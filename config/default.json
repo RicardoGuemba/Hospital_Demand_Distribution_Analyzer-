@@ -1,0 +1,18 @@
+{
+  "data_dir": "Dados_Demanda",
+  "cache_dir": "cache",
+  "logs_dir": "logs",
+  "random_state": 42,
+  "kmeans_n_clusters": 3,
+  "default_scaler": "robust",
+  "cluster_alto_cutoff": 2.0,
+  "cluster_baixo_cutoff": 0.5,
+  "clustering_method": "threshold",
+  "demand_value_mode": "discrete",
+  "outlier_defaults": {
+    "iqr_multiplier": 1.5,
+    "mad_threshold": 3.5,
+    "hampel_window": 5,
+    "hampel_n_sigmas": 3.0
+  }
+}

@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+cache/
+logs/
+*.log
+.DS_Store
+~$*.xlsx
+.pytest_cache/
+.mypy_cache/
+
+# Dados locais e exports gerados (nao versionar)
+Dados_Demanda/
+Dados_Demanda*/
+export_*.csv
