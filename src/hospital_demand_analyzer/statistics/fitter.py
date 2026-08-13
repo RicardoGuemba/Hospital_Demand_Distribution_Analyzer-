@@ -18,6 +18,8 @@ from hospital_demand_analyzer.statistics.distributions.registry import (
     REGISTRY,
     _fit_scipy,
 )
+from hospital_demand_analyzer.statistics.distributions.zero_inflated import ZINB_NAME, ZIP_NAME
+from hospital_demand_analyzer.statistics.fit_params import params_tuple_for_fit
 from hospital_demand_analyzer.statistics.metrics import (
     ad_test,
     compute_aic,
@@ -39,9 +41,9 @@ def _make_quantile_fn(dist, params: tuple):
 
 def _resolve_dist(spec, param_dict: dict):
     if spec.name in DISCRETE_DIST_MAP:
-        return DISCRETE_DIST_MAP[spec.name], tuple(param_dict.values())
+        return DISCRETE_DIST_MAP[spec.name], params_tuple_for_fit(spec.name, param_dict)
     dist = getattr(stats, spec.scipy_name, None)
-    return dist, tuple(param_dict.values())
+    return dist, params_tuple_for_fit(spec.name, param_dict)
 
 
 def fit_single(data: np.ndarray, spec) -> DistributionFitResult:
@@ -213,7 +215,7 @@ def select_fits_for_display(
     names = {r.name for r in selected}
 
     if zero_ratio >= 0.10:
-        for candidate in ("Poisson", "Negative Binomial"):
+        for candidate in (ZIP_NAME, ZINB_NAME, "Poisson", "Negative Binomial"):
             disc = next((r for r in valid if r.name == candidate), None)
             if disc and disc.name not in names:
                 if len(selected) >= 2:

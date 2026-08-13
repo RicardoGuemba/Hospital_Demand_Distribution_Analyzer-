@@ -11,7 +11,7 @@ A simulação responde à pergunta: **quanto tempo leva** para o saldo cair de u
 | Aspecto | Valor |
 |---------|-------|
 | Passo temporal | **1 hora = 60 minutos** (`MINUTES_PER_STEP`) |
-| Demanda por hora | Sorteada da distribuição ajustada; **inteiro estritamente > 0** |
+| Demanda por hora | Sorteada da FDC ajustada (marginal); **inteiro ≥ 0** |
 | Horizonte máximo | **8760 h** (1 ano) — `DEFAULT_MAX_HORIZON_HOURS` |
 | Saída principal | **TempQMin** em **minutos** (UI também exibe horas) |
 
@@ -45,9 +45,9 @@ Se `saldo_inicial ≤ Qmin`, a trajetória termina imediatamente com **TempQMin 
 
 A lógica está em `simulate_single_trajectory()`. A cada iteração do loop principal:
 
-1. Sorteia a demanda `d` (> 0) da distribuição ajustada.
-2. Calcula `novo_saldo = saldo_anterior − d`.
-3. Avalia se o Qmin foi cruzado nesta hora.
+1. Sorteia a demanda `d` (≥ 0) da distribuição ajustada.
+2. Se `d = 0`, o saldo permanece inalterado e o tempo avança **60 minutos inteiros**.
+3. Se `d > 0`, calcula `novo_saldo = saldo_anterior − d` e avalia se o Qmin foi cruzado nesta hora.
 
 ### Caso A — saldo permanece acima do Qmin
 
@@ -78,6 +78,11 @@ tempo_min ← 0
 
 enquanto saldo > Qmin e tempo_min < horizonte_max:
     d ← sortear_demanda()
+    se d = 0:
+        tempo_min ← tempo_min + 60
+        registrar (tempo_min, saldo)
+        continuar
+
     saldo_anterior ← saldo
     novo_saldo ← saldo_anterior − d
 
@@ -145,8 +150,11 @@ Não há fórmula analítica fechada para TempQMin: a estimativa é **empírica*
 flowchart TD
     start[Saldo inicial, Qmin, fit] --> check{Saldo > Qmin?}
     check -->|Nao| zero[TempQMin = 0]
-    check -->|Sim| loop[Sorteia demanda d maior que 0]
-    loop --> update["novo_saldo = saldo - d"]
+    check -->|Sim| loop[Sorteia demanda d maior ou igual a 0]
+    loop --> zeroHour{d = 0?}
+    zeroHour -->|Sim| hourZero["+60 min, saldo inalterado"]
+    hourZero --> horizon
+    zeroHour -->|Nao| update["novo_saldo = saldo - d"]
     update --> cross{novo_saldo <= Qmin?}
     cross -->|Nao| hour["+60 min, saldo = novo_saldo"]
     hour --> horizon{Tempo menor que 8760h?}
@@ -161,7 +169,7 @@ flowchart TD
 ## 7. Pontos importantes na prática
 
 - **Unidades:** TempQMin é armazenado e calculado em **minutos**; a UI formata também em horas (`format_tempqmin()` → ex.: `72.0 min (1.2 h)`).
-- **Demanda sempre positiva:** a simulação não sorteia horas com demanda zero; zeros da série histórica entram no ajuste, mas cada passo simulado consome ≥ 1 unidade.
+- **Amostragem marginal:** cada hora sorteia demanda **≥ 0** conforme a FDC ajustada (Poisson, NB, ZIP, ZINB). Horas com `d = 0` não consomem estoque — coerente com a série histórica zero-fill.
 - **Saldo final abaixo de Qmin:** no cruzamento, o último ponto da trajetória pode registrar saldo < Qmin (ex.: 460 com Qmin = 500). O que importa para TempQMin é o **instante** do cruzamento, não o saldo final.
 - **Normalização:** saldo e Qmin informados na UI são arredondados para inteiros ≥ 1 antes da simulação.
 - **Gráfico vs estatísticas:** o gráfico de trajetórias mostra **saldo × tempo (min)** ao longo do caminho; o painel TempQMin resume apenas o tempo até Qmin em cada uma das N simulações.

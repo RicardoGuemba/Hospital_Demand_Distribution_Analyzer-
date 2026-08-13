@@ -12,7 +12,8 @@ STEP_STATISTICS = "statistics"
 STEP_TIME_SERIES = "time_series"
 STEP_DISTRIBUTIONS = "distributions"
 STEP_MONTE_CARLO = "monte_carlo"
-STEP_COMPARISON = "comparison"
+STEP_SKU_CDF = "sku_cdf"
+STEP_REPLENISHMENT_QMIN = "replenishment_qmin"
 STEP_EXPORT = "export"
 STEP_SETTINGS = "settings"
 
@@ -34,10 +35,11 @@ NAV_ENTRIES: list[NavEntry] = [
     NavEntry("6. Série Temporal", STEP_TIME_SERIES),
     NavEntry("7. Distribuições", STEP_DISTRIBUTIONS),
     NavEntry("8. Simulação Monte Carlo", STEP_MONTE_CARLO),
-    NavEntry("9. Comparação", STEP_COMPARISON),
     NavEntry("SAÍDA", None),
-    NavEntry("10. Exportação", STEP_EXPORT),
-    NavEntry("11. Configurações", STEP_SETTINGS),
+    NavEntry("9. CDF por SKU", STEP_SKU_CDF),
+    NavEntry("10. Qmin reabastecimento", STEP_REPLENISHMENT_QMIN),
+    NavEntry("11. Exportação", STEP_EXPORT),
+    NavEntry("12. Configurações", STEP_SETTINGS),
 ]
 
 WORKFLOW_HINTS: dict[str, str] = {
@@ -47,9 +49,16 @@ WORKFLOW_HINTS: dict[str, str] = {
     STEP_PRODUCTS: "Etapa 4 — Liste e selecione produtos por demanda e cluster.",
     STEP_STATISTICS: "Etapa 5 — Estatísticas descritivas clássicas por SKU (média, dispersão, percentis, forma).",
     STEP_TIME_SERIES: "Etapa 6 — Analise série temporal, histograma e FDC do produto selecionado.",
-    STEP_DISTRIBUTIONS: "Etapa 7 — Compare ajustes estatísticos por SKU ou cluster agregado.",
+    STEP_DISTRIBUTIONS: "Etapa 7 — Compare ajustes (Poisson, NB, ZIP, ZINB) e selecione a melhor FDC por AIC.",
     STEP_MONTE_CARLO: "Etapa 8 — Simule trajetórias Monte Carlo para estimar TempQMin até atingir Qmin.",
-    STEP_COMPARISON: "Etapa 9 — Compare série original × tratada após outliers.",
+    STEP_SKU_CDF: (
+        "Etapa 9 — Ajuste e revisão da CDF de todos os SKUs; "
+        "distribuição escolhida (AIC) com parâmetros representativos."
+    ),
+    STEP_REPLENISHMENT_QMIN: (
+        "Etapa 10 — Qmin proposta via Monte Carlo: demanda acumulada no tempo de "
+        "reabastecimento (P95), apenas SKUs selecionados na sessão."
+    ),
 }
 
 NEXT_STEP: dict[str, tuple[str, str]] = {
@@ -60,6 +69,7 @@ NEXT_STEP: dict[str, tuple[str, str]] = {
     STEP_STATISTICS: (STEP_TIME_SERIES, "Próximo: Série Temporal →"),
     STEP_TIME_SERIES: (STEP_DISTRIBUTIONS, "Próximo: Distribuições →"),
     STEP_DISTRIBUTIONS: (STEP_MONTE_CARLO, "Próximo: Simulação Monte Carlo →"),
-    STEP_MONTE_CARLO: (STEP_COMPARISON, "Próximo: Comparação →"),
-    STEP_COMPARISON: (STEP_EXPORT, "Próximo: Exportação →"),
+    STEP_MONTE_CARLO: (STEP_SKU_CDF, "Próximo: CDF por SKU →"),
+    STEP_SKU_CDF: (STEP_REPLENISHMENT_QMIN, "Próximo: Qmin reabastecimento →"),
+    STEP_REPLENISHMENT_QMIN: (STEP_EXPORT, "Próximo: Exportação →"),
 }

@@ -8,10 +8,14 @@ from scipy import stats
 from hospital_demand_analyzer.domain.models import DistributionFitResult
 from hospital_demand_analyzer.plots.canvas import MplCanvas
 from hospital_demand_analyzer.statistics.ecdf import compute_ecdf
+from hospital_demand_analyzer.statistics.distributions.zero_inflated import ZINB_NAME, ZIP_NAME, zinb_dist, zip_dist
+from hospital_demand_analyzer.statistics.fit_params import params_tuple_for_fit
 
 DIST_MAP = {
     "Poisson": stats.poisson,
     "Negative Binomial": stats.nbinom,
+    ZIP_NAME: zip_dist,
+    ZINB_NAME: zinb_dist,
     "Exponential": stats.expon,
     "Gamma": stats.gamma,
     "Lognormal": stats.lognorm,
@@ -88,7 +92,7 @@ def plot_fdc_adjusted(
             dist = DIST_MAP.get(fit.name)
             if dist is None:
                 continue
-            params = tuple(fit.params.values())
+            params = params_tuple_for_fit(fit.name, fit.params)
             try:
                 cdf = _conditional_cdf(dist, x_line, params, positive_only)
                 ax.plot(
@@ -127,7 +131,7 @@ def plot_ecdf(
             dist = DIST_MAP.get(fit.name)
             if dist is None:
                 continue
-            params = tuple(fit.params.values())
+            params = params_tuple_for_fit(fit.name, fit.params)
             try:
                 cdf = _conditional_cdf(dist, x_line, params, positive_only)
                 ax.plot(x_line, cdf, label=f"CDF {fit.name}")

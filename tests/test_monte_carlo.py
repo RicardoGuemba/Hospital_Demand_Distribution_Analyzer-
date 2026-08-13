@@ -70,13 +70,13 @@ def test_normalize_inventory_level():
     assert normalize_inventory_level(10.6) == 11
 
 
-def test_sample_hourly_demand_is_positive_integer():
-    fit = _poisson_fit(lam=0.01)
+def test_sample_hourly_demand_is_non_negative_integer():
+    fit = _poisson_fit(lam=2.0)
     rng = np.random.default_rng(42)
     for _ in range(50):
         d = sample_hourly_demand(fit, rng)
         assert isinstance(d, int)
-        assert d > 0
+        assert d >= 0
 
 
 def test_tempqmin_zero_when_saldo_at_or_below_qmin():
@@ -119,6 +119,62 @@ def test_fractional_tempqmin_on_crossing_in_minutes():
         rng = np.random.default_rng(0)
         traj = mc.simulate_single_trajectory(520.0, 500.0, fit, rng=rng)
         assert abs(traj.temp_qmin - 72.0) < 1e-9
+    finally:
+        mc.sample_hourly_demand = original
+
+
+def test_monte_carlo_poisson_zero_hours_preserve_balance():
+    fit = _poisson_fit(lam=0.05)
+
+    import hospital_demand_analyzer.statistics.monte_carlo as mc
+
+    calls = iter([0, 0, 0, 100])
+
+    def mock_sample(_fit, _rng):
+        return next(calls)
+
+    original = mc.sample_hourly_demand
+    mc.sample_hourly_demand = mock_sample
+    try:
+        rng = np.random.default_rng(0)
+        traj = mc.simulate_single_trajectory(520.0, 500.0, fit, rng=rng)
+        assert traj.balances[0] == pytest.approx(520.0)
+        assert traj.balances[-1] == pytest.approx(500.0)
+        assert traj.temp_qmin == pytest.approx(3 * MINUTES_PER_STEP + (20.0 / 100.0) * MINUTES_PER_STEP)
+    finally:
+        mc.sample_hourly_demand = original
+
+
+def test_monte_carlo_zip_zero_hours_preserve_balance():
+    from hospital_demand_analyzer.statistics.distributions.zero_inflated import ZIP_NAME
+
+    fit = DistributionFitResult(
+        name=ZIP_NAME,
+        dist_type="discrete",
+        params={"pi": 0.99, "lambda": 50.0},
+        log_likelihood=-10.0,
+        n_params=2,
+        aic=24.0,
+        aicc=24.0,
+        bic=30.0,
+        converged=True,
+    )
+
+    import hospital_demand_analyzer.statistics.monte_carlo as mc
+
+    calls = iter([0, 0, 0, 100])
+
+    def mock_sample(_fit, _rng):
+        return next(calls)
+
+    original = mc.sample_hourly_demand
+    mc.sample_hourly_demand = mock_sample
+    try:
+        rng = np.random.default_rng(0)
+        traj = mc.simulate_single_trajectory(520.0, 500.0, fit, rng=rng)
+        assert traj.balances[0] == pytest.approx(520.0)
+        assert traj.balances[-1] == pytest.approx(500.0)
+        assert traj.temp_qmin == pytest.approx(3 * MINUTES_PER_STEP + (20.0 / 100.0) * MINUTES_PER_STEP)
     finally:
         mc.sample_hourly_demand = original
 

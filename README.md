@@ -16,11 +16,12 @@ Desenvolvido para apoiar decisões de estoque e logística em ambientes com dema
 | 4 | Produtos | Listagem, busca e seleção de SKUs |
 | 5 | Estatísticas | Descritivas por SKU: média aritmética, E[X] empírico, E[X\|X>0], percentis, forma |
 | 6 | Série Temporal | Gráfico horário, histograma e FDC empírica/ajustada |
-| 7 | Distribuições | Ajuste Poisson, Binomial Negativa, Gamma, Lognormal, Weibull, Exponencial — ranking AIC/BIC/GoF |
-| 8 | Monte Carlo | Simulação de trajetórias de estoque até Qmin; estimativa de **TempQMin** |
-| 9 | Comparação | Original × série tratada (outliers) |
-| 10 | Exportação | CSV / XLSX |
-| 11 | Configurações | Seed, clusters K-Means, diretório de dados |
+| 7 | Distribuições | Ajuste Poisson, Binomial Negativa, **ZIP** e **ZINB** (zero-infladas) — ranking AIC/BIC/GoF |
+| 8 | Monte Carlo | Simulação de trajetórias de estoque até Qmin; estimativa de **TempQMin** (zeros respeitados conforme FDC ajustada) |
+| 9 | CDF por SKU | Ajuste em lote, FDC de todas candidatas, distribuição escolhida (AIC) e parâmetros |
+| 10 | Qmin reabastecimento | Qmin proposta = P95 da demanda acumulada no intervalo de reabastecimento (SKUs da sessão) |
+| 11 | Exportação | CSV / XLSX |
+| 12 | Configurações | Seed, clusters K-Means, diretório de dados |
 
 ---
 
@@ -80,7 +81,7 @@ A aplicação:
 A etapa 8 estima o **tempo até o saldo atingir Qmin**, sorteando demanda horária da melhor distribuição ajustada (AIC):
 
 - Passo de simulação: **60 minutos**
-- Demanda sorteada: **inteiro > 0**
+- Demanda sorteada: **inteiro ≥ 0** (marginal da FDC ajustada)
 - Interpolação fracionária ao cruzar Qmin dentro da hora
 - N trajetórias configurável (padrão: 100)
 

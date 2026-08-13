@@ -24,6 +24,7 @@ from hospital_demand_analyzer.exports.exporter import (
     export_time_series,
 )
 from hospital_demand_analyzer.services.time_series import hourly_series_to_dataframe
+from hospital_demand_analyzer.ui.nav import STEP_REPLENISHMENT_QMIN, STEP_SKU_CDF
 from hospital_demand_analyzer.utils.paths import project_root
 
 
@@ -55,7 +56,23 @@ class ExportView(QWidget):
             btn = QPushButton(label)
             btn.clicked.connect(handler)
             layout.addWidget(btn)
+        btn_cdf = QPushButton("Ir para CDF por SKU")
+        btn_cdf.clicked.connect(self._go_sku_cdf)
+        layout.addWidget(btn_cdf)
+        btn_qmin = QPushButton("Ir para Qmin reabastecimento")
+        btn_qmin.clicked.connect(self._go_replenishment_qmin)
+        layout.addWidget(btn_qmin)
         layout.addStretch()
+
+    def _go_sku_cdf(self) -> None:
+        win = self.window()
+        if hasattr(win, "navigate_to"):
+            win.navigate_to(STEP_SKU_CDF)
+
+    def _go_replenishment_qmin(self) -> None:
+        win = self.window()
+        if hasattr(win, "navigate_to"):
+            win.navigate_to(STEP_REPLENISHMENT_QMIN)
 
     def _fmt(self) -> str:
         return self.fmt_combo.currentText()

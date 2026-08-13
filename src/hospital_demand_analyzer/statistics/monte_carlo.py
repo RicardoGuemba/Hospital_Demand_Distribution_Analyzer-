@@ -67,6 +67,13 @@ def simulate_single_trajectory(
 
     while saldo > qmin and tempo_min < max_horizon_min:
         demanda = sample_hourly_demand(fit, rng)
+
+        if demanda == 0:
+            tempo_min += MINUTES_PER_STEP
+            times.append(tempo_min)
+            balances.append(saldo)
+            continue
+
         saldo_anterior = saldo
         novo_saldo = saldo_anterior - demanda
 
@@ -74,8 +81,8 @@ def simulate_single_trajectory(
             fracao = (saldo_anterior - qmin) / demanda
             tempo_min += fracao * MINUTES_PER_STEP
             times.append(tempo_min)
-            balances.append(novo_saldo)
-            saldo = novo_saldo
+            balances.append(qmin)
+            saldo = qmin
             break
 
         saldo = novo_saldo

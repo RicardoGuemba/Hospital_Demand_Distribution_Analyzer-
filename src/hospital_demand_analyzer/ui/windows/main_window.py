@@ -21,26 +21,28 @@ from hospital_demand_analyzer.app.state import AppState
 from hospital_demand_analyzer.ui.nav import (
     NAV_ENTRIES,
     STEP_CLUSTERS,
-    STEP_COMPARISON,
     STEP_DATA,
     STEP_DISTRIBUTIONS,
     STEP_EXPORT,
     STEP_MONTE_CARLO,
     STEP_OUTLIERS,
     STEP_PRODUCTS,
+    STEP_REPLENISHMENT_QMIN,
     STEP_SETTINGS,
+    STEP_SKU_CDF,
     STEP_STATISTICS,
     STEP_TIME_SERIES,
 )
 from hospital_demand_analyzer.ui.views.clusters_view import ClustersView
-from hospital_demand_analyzer.ui.views.comparison_view import ComparisonView
 from hospital_demand_analyzer.ui.views.data_view import DataView
 from hospital_demand_analyzer.ui.views.distributions_view import DistributionsView
 from hospital_demand_analyzer.ui.views.export_view import ExportView
 from hospital_demand_analyzer.ui.views.monte_carlo_view import MonteCarloView
 from hospital_demand_analyzer.ui.views.outliers_view import OutliersView
 from hospital_demand_analyzer.ui.views.products_view import ProductsView
+from hospital_demand_analyzer.ui.views.replenishment_qmin_view import ReplenishmentQminView
 from hospital_demand_analyzer.ui.views.settings_view import SettingsView
+from hospital_demand_analyzer.ui.views.sku_cdf_view import SkuCdfView
 from hospital_demand_analyzer.ui.views.statistics_view import StatisticsView
 from hospital_demand_analyzer.ui.views.time_series_view import TimeSeriesView
 
@@ -94,14 +96,15 @@ class MainWindow(QMainWindow):
             STEP_TIME_SERIES: TimeSeriesView(self.state, self.controller),
             STEP_DISTRIBUTIONS: DistributionsView(self.state, self.controller),
             STEP_MONTE_CARLO: MonteCarloView(self.state, self.controller),
-            STEP_COMPARISON: ComparisonView(self.state, self.controller),
+            STEP_SKU_CDF: SkuCdfView(self.state, self.controller),
+            STEP_REPLENISHMENT_QMIN: ReplenishmentQminView(self.state, self.controller),
             STEP_EXPORT: ExportView(self.state, self.controller),
             STEP_SETTINGS: SettingsView(self.state),
         }
         for key in (
             STEP_DATA, STEP_OUTLIERS, STEP_CLUSTERS, STEP_PRODUCTS, STEP_STATISTICS,
-            STEP_TIME_SERIES, STEP_DISTRIBUTIONS, STEP_MONTE_CARLO, STEP_COMPARISON,
-            STEP_EXPORT, STEP_SETTINGS,
+            STEP_TIME_SERIES, STEP_DISTRIBUTIONS, STEP_MONTE_CARLO, STEP_SKU_CDF,
+            STEP_REPLENISHMENT_QMIN, STEP_EXPORT, STEP_SETTINGS,
         ):
             self.stack.addWidget(self.views[key])
 

@@ -8,6 +8,15 @@ from typing import Callable
 import numpy as np
 from scipy import stats
 
+from hospital_demand_analyzer.statistics.distributions.zero_inflated import (
+    ZINB_NAME,
+    ZIP_NAME,
+    fit_zinb,
+    fit_zip,
+    zinb_dist,
+    zip_dist,
+)
+
 
 @dataclass
 class DistributionSpec:
@@ -61,6 +70,8 @@ def _fit_nbinom(data: np.ndarray) -> tuple[dict, float, bool]:
 REGISTRY: list[DistributionSpec] = [
     DistributionSpec("Poisson", "discrete", "poisson", 1, _fit_poisson),
     DistributionSpec("Negative Binomial", "discrete", "nbinom", 2, _fit_nbinom),
+    DistributionSpec(ZIP_NAME, "discrete", "zip", 2, fit_zip),
+    DistributionSpec(ZINB_NAME, "discrete", "zinb", 3, fit_zinb),
     DistributionSpec("Exponential", "continuous", "expon", 1),
     DistributionSpec("Gamma", "continuous", "gamma", 2),
     DistributionSpec("Lognormal", "continuous", "lognorm", 2),
@@ -70,6 +81,8 @@ REGISTRY: list[DistributionSpec] = [
 DISCRETE_DIST_MAP = {
     "Poisson": stats.poisson,
     "Negative Binomial": stats.nbinom,
+    ZIP_NAME: zip_dist,
+    ZINB_NAME: zinb_dist,
 }
 
 

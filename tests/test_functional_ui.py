@@ -67,7 +67,7 @@ def _seed_state(state: AppState) -> None:
 def test_main_window_opens_without_autoload(qapp):
     window = MainWindow(AppState(), auto_load=False)
     assert window.sidebar.count() > 0
-    assert window.stack.count() == 11
+    assert window.stack.count() == 12
     window.close()
     qapp.processEvents()
 

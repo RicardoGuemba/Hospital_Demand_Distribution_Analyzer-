@@ -17,6 +17,7 @@ from hospital_demand_analyzer.domain.models import (
     HourlySeries,
     ImportResult,
     OutlierResult,
+    ReplenishmentQminResult,
 )
 from hospital_demand_analyzer.domain.demand_values import DEFAULT_VALUE_MODE, normalize_value_mode
 from hospital_demand_analyzer.utils.config import AppConfig
@@ -39,6 +40,7 @@ class AppState(QObject):
     outliers_changed = Signal()
     fit_completed = Signal(str)
     value_mode_changed = Signal(str)
+    session_skus_changed = Signal()
 
     def __init__(self, config: AppConfig | None = None) -> None:
         super().__init__()
@@ -51,7 +53,10 @@ class AppState(QObject):
         self.cluster_result: ClusterResult | None = None
         self.cluster_map: dict[str, ClusterAssignment] = {}
         self.fit_results: dict[str, list[DistributionFitResult]] = {}
+        self.replenishment_qmin_results: dict[str, ReplenishmentQminResult] = {}
         self.outlier_results: dict[str, OutlierResult] = {}
+        self.session_selected_skus: set[str] = set()
+        self.session_sku_order: list[str] = []
         self.selected_sku: str = ""
         self.selected_cluster: str = "Todos"
         self.cluster_filter: str = "Todos"
@@ -90,8 +95,12 @@ class AppState(QObject):
 
     def filtered_skus(self) -> list[str]:
         if self.cluster_filter == "Todos":
-            return list(self.hourly_series.keys())
-        return [
+            return sorted(self.hourly_series.keys())
+        return sorted(
             p for p, a in self.cluster_map.items()
-            if a.cluster_name == self.cluster_filter
-        ]
+            if a.cluster_name == self.cluster_filter and p in self.hourly_series
+        )
+
+    def processing_skus(self) -> list[str]:
+        """SKUs in scope for batch CDF fit/export (respects cluster filter)."""
+        return self.filtered_skus()

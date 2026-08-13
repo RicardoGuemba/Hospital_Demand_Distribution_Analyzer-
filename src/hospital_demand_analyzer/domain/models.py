@@ -195,6 +195,43 @@ class DistributionFitResult:
 
 
 @dataclass
+class DemandAccumulationTrajectory:
+    """Single simulated demand accumulation path over a replenishment interval."""
+
+    times: np.ndarray
+    cumulative_demand: np.ndarray
+    balances: np.ndarray
+    total_demand: int
+
+
+@dataclass
+class ReplenishmentQminResult:
+    """Monte Carlo Qmin proposal from accumulated demand over replenishment time."""
+
+    produto: str
+    replenishment_minutes: float
+    n_trajetorias: int
+    distribuicao: str
+    parametros: dict[str, float]
+    trajectories: list[DemandAccumulationTrajectory]
+    accumulated_demands: np.ndarray
+    saldo_inicial: int
+    qmin_proposed: float
+    mean: float
+    median: float
+    q1: float
+    q3: float
+    p5: float
+    p10: float
+    p90: float
+    p95: float
+    p99: float
+    std: float
+    min_: float
+    max_: float
+
+
+@dataclass
 class MonteCarloTrajectory:
     """Single simulated inventory path until Qmin is reached."""
 

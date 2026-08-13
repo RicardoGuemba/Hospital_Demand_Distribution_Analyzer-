@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 from PySide6.QtCore import QThread, Signal
 
 from hospital_demand_analyzer.app.state import AppState
@@ -115,6 +116,105 @@ class FitWorker(QThread):
             self.finished_ok.emit(self.produto, results)
         except Exception as exc:
             self.finished_err.emit(self.produto, str(exc))
+
+
+class BulkFitWorker(QThread):
+    progress = Signal(str, int, int)
+    sku_done = Signal(str, object)
+    sku_failed = Signal(str, str)
+    finished_ok = Signal()
+    finished_err = Signal(str)
+
+    def __init__(
+        self,
+        jobs: list[tuple[str, np.ndarray]],
+        *,
+        include_zeros: bool = True,
+        value_mode: str = "discrete",
+    ) -> None:
+        super().__init__()
+        self.jobs = jobs
+        self.include_zeros = include_zeros
+        self.value_mode = value_mode
+        self._cancel_check = None
+
+    def set_cancel_check(self, fn) -> None:
+        self._cancel_check = fn
+
+    def run(self) -> None:
+        try:
+            total = len(self.jobs)
+            for i, (produto, values) in enumerate(self.jobs):
+                if self.isInterruptionRequested() or (self._cancel_check and self._cancel_check()):
+                    break
+                self.progress.emit(produto, i, total)
+                try:
+                    results = fit_all(
+                        values,
+                        include_zeros=self.include_zeros,
+                        value_mode=self.value_mode,
+                    )
+                    self.sku_done.emit(produto, results)
+                except Exception as exc:
+                    self.sku_failed.emit(produto, str(exc))
+            self.progress.emit("", total, total)
+            self.finished_ok.emit()
+        except Exception as exc:
+            self.finished_err.emit(str(exc))
+
+
+class ReplenishmentQminWorker(QThread):
+    progress = Signal(str, int, int)
+    sku_done = Signal(str, object)
+    sku_failed = Signal(str, str)
+    finished_ok = Signal()
+    finished_err = Signal(str)
+
+    def __init__(
+        self,
+        jobs: list[tuple[str, object]],
+        *,
+        replenishment_minutes: float,
+        n_trajetorias: int = 100,
+        seed: int | None = None,
+    ) -> None:
+        super().__init__()
+        self.jobs = jobs
+        self.replenishment_minutes = replenishment_minutes
+        self.n_trajetorias = n_trajetorias
+        self.seed = seed
+        self._cancel_check = None
+
+    def set_cancel_check(self, fn) -> None:
+        self._cancel_check = fn
+
+    def run(self) -> None:
+        try:
+            from hospital_demand_analyzer.statistics.replenishment_qmin import (
+                run_replenishment_qmin_monte_carlo,
+            )
+
+            total = len(self.jobs)
+            for i, (produto, fit) in enumerate(self.jobs):
+                if self.isInterruptionRequested() or (self._cancel_check and self._cancel_check()):
+                    break
+                self.progress.emit(produto, i, total)
+                try:
+                    sku_seed = None if self.seed is None else self.seed + i
+                    result = run_replenishment_qmin_monte_carlo(
+                        produto,
+                        self.replenishment_minutes,
+                        fit,
+                        n_trajetorias=self.n_trajetorias,
+                        seed=sku_seed,
+                    )
+                    self.sku_done.emit(produto, result)
+                except Exception as exc:
+                    self.sku_failed.emit(produto, str(exc))
+            self.progress.emit("", total, total)
+            self.finished_ok.emit()
+        except Exception as exc:
+            self.finished_err.emit(str(exc))
 
 
 class MonteCarloWorker(QThread):
