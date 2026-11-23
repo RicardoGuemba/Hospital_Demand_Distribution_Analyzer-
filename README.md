@@ -1,10 +1,18 @@
-# Hospital Demand Distribution Analyzer
+# Análise de demanda hospitalar por produto
 
 Aplicação desktop em **Python / PySide6** para análise estatística da **demanda horária hospitalar** por SKU: importação de dados, estatísticas descritivas, clustering por giro, ajuste de distribuições de probabilidade, detecção de outliers, simulação **Monte Carlo TempQMin** e exportação.
 
 Desenvolvido para apoiar decisões de estoque e logística em ambientes com demanda **intermitente** (muitas horas com consumo zero).
 
 ---
+
+**Primeira experiência.** Importe um CSV ou XLSX de exemplo com produto, data/hora e quantidade. Selecione um SKU, examine os períodos de consumo zero e compare a distribuição ajustada com a série observada. A simulação estima o tempo até o saldo atingir Qmin.
+
+**Arquivos de referência**
+
+- [run_app.command](run_app.command)
+- [run_app.bat](run_app.bat)
+- [docs/SIMULACAO_MONTE_CARLO_TEMQMIN.md](docs/SIMULACAO_MONTE_CARLO_TEMQMIN.md)
 
 ## Funcionalidades
 
